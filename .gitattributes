@@ -1,0 +1,30 @@
+﻿# -----------------------------------------------------------------------------
+# Git Attributes for Unreal Engine
+# -----------------------------------------------------------------------------
+
+# Source code: Force consistent line endings (CRLF on Windows, LF on Linux/Mac)
+*.cpp text diff=cpp
+*.h text diff=cpp
+*.cs text diff=csharp
+*.json text
+*.xml text
+*.yml text
+*.ini text
+*.Build.cs text
+*.Target.cs text
+
+# Unreal Engine Assets: Treat as binary (Do NOT try to text-merge these!)
+*.uasset binary
+*.umap binary
+
+# Art & Sound Assets: Treat as binary
+*.png binary
+*.jpg binary
+*.tga binary
+*.fbx binary
+*.wav binary
+*.mp3 binary
+*.psd binary
+
+# Visual Studio files
+*.sln text eol=crlf

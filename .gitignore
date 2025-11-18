@@ -1,0 +1,24 @@
+﻿# Visual Studio / JetBrains
+.vs/
+.idea/
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.user
+
+# Unreal Engine Temporary Files
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Build/
+
+# Project Files (We can regenerate these)
+*.scsl
+*.unity
+*.udn
+
+# OS Files
+.DS_Store
+Thumbs.db
