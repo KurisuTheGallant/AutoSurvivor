@@ -14,6 +14,10 @@ Saved/
 DerivedDataCache/
 Build/
 
+# Ignore Android File Server settings only
+Config/AndroidFileServer*.ini
+
+
 # Project Files (We can regenerate these)
 *.scsl
 *.unity
