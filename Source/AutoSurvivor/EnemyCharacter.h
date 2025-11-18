@@ -26,4 +26,10 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// Variables
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	class ACharacter* PlayerTarget; // We will store the player here
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	float MovementSpeed = 300.0f; // Slower than the player (usually 600)
 };
