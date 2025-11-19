@@ -27,19 +27,22 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// The collision sphere (root component)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet")
 	USphereComponent* CollisionComp;
 
-	// The visual mesh
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet")
 	UStaticMeshComponent* BulletMesh;
 
-	// The component that handles movement (flying)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet")
 	UProjectileMovementComponent* ProjectileMovement;
 
-	// How fast the bullet flies
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
 	float Speed = 1000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
+	float Damage = 50.0f; // Two shots to kill (since enemy health is 100)
+
+	// Collision Function
+	UFUNCTION()
+	void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

@@ -28,8 +28,16 @@ public:
 
 	// Variables
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-	class ACharacter* PlayerTarget; // We will store the player here
+	class ACharacter* PlayerTarget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	float MovementSpeed = 300.0f; // Slower than the player (usually 600)
+	float MovementSpeed = 300.0f;
+
+	// --- HEALTH SYSTEM ---
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float Health = 100.0f;
+
+	// Function to apply damage to this enemy
+	void DealDamage(float Amount);
 };
