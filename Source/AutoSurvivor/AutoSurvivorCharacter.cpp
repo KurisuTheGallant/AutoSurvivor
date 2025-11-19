@@ -10,6 +10,11 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+// Added includes for shooting
+#include "Bullet.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "EnemyCharacter.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -74,6 +79,57 @@ void AAutoSurvivorCharacter::BeginPlay()
 		PlayerController->ConsoleCommand("viewmode unlit");
 		// --------------------------------
 	}
+
+	// --- START AUTO FIRE ---
+	GetWorldTimerManager().SetTimer(FireTimerHandle, this, &AAutoSurvivorCharacter::FireWeapon, FireRate, true);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// WEAPON LOGIC
+
+AActor* AAutoSurvivorCharacter::GetNearestEnemy()
+{
+	TArray<AActor*> AllEnemies;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyCharacter::StaticClass(), AllEnemies);
+
+	AActor* NearestEnemy = nullptr;
+	float NearestDistanceSq = FLT_MAX; // Start with a huge number
+	FVector MyLoc = GetActorLocation();
+
+	for (AActor* Enemy : AllEnemies)
+	{
+		if (Enemy)
+		{
+			float DistSq = FVector::DistSquared(MyLoc, Enemy->GetActorLocation());
+			if (DistSq < NearestDistanceSq)
+			{
+				NearestDistanceSq = DistSq;
+				NearestEnemy = Enemy;
+			}
+		}
+	}
+	return NearestEnemy;
+}
+
+void AAutoSurvivorCharacter::FireWeapon()
+{
+	if (!BulletClass) return; // Safety check
+
+	// 1. Find target
+	AActor* Target = GetNearestEnemy();
+	FRotator SpawnRotation = GetActorRotation(); // Default: Shoot forward
+
+	// 2. If we found an enemy, aim at them
+	if (Target)
+	{
+		FVector Direction = Target->GetActorLocation() - GetActorLocation();
+		SpawnRotation = Direction.Rotation();
+	}
+
+	// 3. Spawn Bullet
+	FVector SpawnLocation = GetActorLocation() + (GetActorForwardVector() * 50.0f); // Start slightly in front of player
+
+	GetWorld()->SpawnActor<ABullet>(BulletClass, SpawnLocation, SpawnRotation);
 }
 
 //////////////////////////////////////////////////////////////////////////

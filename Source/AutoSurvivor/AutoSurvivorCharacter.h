@@ -12,6 +12,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
+class ABullet; // Forward declaration so we can use ABullet pointer
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -69,4 +70,23 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	// --- WEAPON SYSTEM ---
+
+	// Function that spawns the bullet
+	void FireWeapon();
+
+	// Timer handle to manage auto-fire
+	FTimerHandle FireTimerHandle;
+
+	// Which bullet blueprint to spawn? (We set this in Editor)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	TSubclassOf<ABullet> BulletClass;
+
+	// Time between shots (seconds)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float FireRate = 1.0f;
+
+	// Helper to find nearest enemy
+	AActor* GetNearestEnemy();
 };
