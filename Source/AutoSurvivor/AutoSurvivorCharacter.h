@@ -12,7 +12,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
-class ABullet; // Forward declaration so we can use ABullet pointer
+class ABullet;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -72,21 +72,28 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	// --- WEAPON SYSTEM ---
-
-	// Function that spawns the bullet
 	void FireWeapon();
-
-	// Timer handle to manage auto-fire
 	FTimerHandle FireTimerHandle;
 
-	// Which bullet blueprint to spawn? (We set this in Editor)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	TSubclassOf<ABullet> BulletClass;
 
-	// Time between shots (seconds)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float FireRate = 1.0f;
 
-	// Helper to find nearest enemy
 	AActor* GetNearestEnemy();
+
+	// --- LEVELING SYSTEM (NEW) ---
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Experience")
+	float CurrentExperience = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Experience")
+	float MaxExperience = 100.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Experience")
+	int32 CurrentLevel = 1;
+
+	// Function called by the Gem when picked up
+	void AddExperience(float Amount);
 };

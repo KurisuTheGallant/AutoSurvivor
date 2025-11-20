@@ -3,31 +3,25 @@
 #include "EnemyCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "ExperienceGem.h" // Include gem so we can spawn it
 
-// Sets default values
 AEnemyCharacter::AEnemyCharacter()
 {
-	// Set this character to call Tick() every frame.
 	PrimaryActorTick.bCanEverTick = true;
-
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
-	// Configure Movement
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 360.0f, 0.0f);
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 }
 
-// Called when the game starts or when spawned
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
 	PlayerTarget = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	GetCharacterMovement()->MaxWalkSpeed = MovementSpeed;
 }
 
-// Called every frame
 void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -41,13 +35,12 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	}
 }
 
-// Called to bind functionality to input
 void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-// --- HEALTH LOGIC ---
+// --- MODIFIED DAMAGE FUNCTION ---
 
 void AEnemyCharacter::DealDamage(float Amount)
 {
@@ -55,6 +48,14 @@ void AEnemyCharacter::DealDamage(float Amount)
 
 	if (Health <= 0.0f)
 	{
-		Destroy(); // Goodbye!
+		// Spawn the Gem right where the enemy is standing
+		if (GemClass)
+		{
+			FVector SpawnLoc = GetActorLocation();
+			// Spawn it slightly lower so it sits on the ground (or adjust collision)
+			GetWorld()->SpawnActor<AExperienceGem>(GemClass, SpawnLoc, FRotator::ZeroRotator);
+		}
+
+		Destroy();
 	}
 }
