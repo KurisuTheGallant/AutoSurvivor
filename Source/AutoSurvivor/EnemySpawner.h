@@ -15,35 +15,35 @@ class AUTOSURVIVOR_API AEnemySpawner : public AActor
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	AEnemySpawner();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// The area where enemies can spawn
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
 	UBoxComponent* SpawnArea;
 
-	// What class of enemy to spawn (we set this in Blueprint)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
 	TSubclassOf<AEnemyCharacter> EnemyClass;
 
-	// How fast to spawn enemies (seconds)
+	// Base spawn rate (starts slow)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
-	float SpawnInterval = 1.0f;
+	float BaseSpawnInterval = 2.0f;
 
-	// The Timer Handle to manage the repetitive spawning
+	// Minimum spawn rate (cap it so we don't crash the PC)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
+	float MinSpawnInterval = 0.1f;
+
 	FTimerHandle SpawnTimerHandle;
 
-	// The function that actually creates the enemy
-	void SpawnEnemy();
+	// --- DIFFICULTY VARIABLES ---
 
-	// Helper to find a random point around the player
+	float CurrentTime = 0.0f;
+	float CurrentDifficulty = 1.0f;
+
+	void SpawnEnemy();
 	FVector GetRandomPointOffScreen();
 };

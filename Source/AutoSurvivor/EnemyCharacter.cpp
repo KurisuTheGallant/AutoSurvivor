@@ -3,7 +3,7 @@
 #include "EnemyCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "ExperienceGem.h" // Include gem so we can spawn it
+#include "ExperienceGem.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -19,6 +19,8 @@ void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	PlayerTarget = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+	// Apply the speed (in case we forgot to call SetStats)
 	GetCharacterMovement()->MaxWalkSpeed = MovementSpeed;
 }
 
@@ -40,22 +42,31 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-// --- MODIFIED DAMAGE FUNCTION ---
-
 void AEnemyCharacter::DealDamage(float Amount)
 {
 	Health -= Amount;
 
 	if (Health <= 0.0f)
 	{
-		// Spawn the Gem right where the enemy is standing
 		if (GemClass)
 		{
 			FVector SpawnLoc = GetActorLocation();
-			// Spawn it slightly lower so it sits on the ground (or adjust collision)
 			GetWorld()->SpawnActor<AExperienceGem>(GemClass, SpawnLoc, FRotator::ZeroRotator);
 		}
-
 		Destroy();
 	}
+}
+
+// --- DIFFICULTY LOGIC ---
+
+void AEnemyCharacter::SetStats(float DifficultyMultiplier)
+{
+	// Health scales linearly (Double difficulty = Double Health)
+	Health *= DifficultyMultiplier;
+
+	// Speed scales slowly (so they don't become impossible too fast)
+	// Example: At 2x difficulty, speed increases by 10%
+	MovementSpeed *= (1.0f + (DifficultyMultiplier * 0.1f));
+
+	GetCharacterMovement()->MaxWalkSpeed = MovementSpeed;
 }

@@ -33,10 +33,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float Health = 100.0f;
 
-	// --- LOOT SYSTEM (NEW) ---
-	// Which gem to drop when dead
+	// --- LOOT SYSTEM ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loot")
 	TSubclassOf<AExperienceGem> GemClass;
 
 	void DealDamage(float Amount);
+
+	// --- DIFFICULTY SYSTEM (NEW) ---
+	// Call this right after spawning to buff the enemy
+	void SetStats(float DifficultyMultiplier);
 };
