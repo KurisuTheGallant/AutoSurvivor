@@ -55,6 +55,9 @@ void AAutoSurvivorCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Set Health
+	CurrentHealth = MaxHealth;
+
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -96,7 +99,7 @@ AActor* AAutoSurvivorCharacter::GetNearestEnemy()
 
 void AAutoSurvivorCharacter::FireWeapon()
 {
-	if (!BulletClass) return;
+	if (!BulletClass || bIsDead) return; // Don't shoot if dead
 
 	AActor* Target = GetNearestEnemy();
 	FRotator SpawnRotation = GetActorRotation();
@@ -114,20 +117,41 @@ void AAutoSurvivorCharacter::FireWeapon()
 
 void AAutoSurvivorCharacter::AddExperience(float Amount)
 {
+	if (bIsDead) return;
+
 	CurrentExperience += Amount;
 
-	// Did we level up?
 	if (CurrentExperience >= MaxExperience)
 	{
 		CurrentLevel++;
-		CurrentExperience -= MaxExperience; // Keep overflow XP
-		MaxExperience *= 1.2f; // Next level is 20% harder to reach
+		CurrentExperience -= MaxExperience;
+		MaxExperience *= 1.2f;
 
-		// Debug Message on screen (Cyan color)
 		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, FString::Printf(TEXT("LEVEL UP! New Level: %d"), CurrentLevel));
 		}
+	}
+}
+
+// --- HEALTH LOGIC ---
+
+void AAutoSurvivorCharacter::DamagePlayer(float Amount)
+{
+	if (bIsDead) return;
+
+	CurrentHealth -= Amount;
+
+	if (CurrentHealth <= 0.0f)
+	{
+		CurrentHealth = 0.0f;
+		bIsDead = true;
+
+		// Stop firing
+		GetWorldTimerManager().ClearTimer(FireTimerHandle);
+
+		// Trigger the Blueprint Event (UI, Sound, etc.)
+		OnDeath();
 	}
 }
 
@@ -146,6 +170,8 @@ void AAutoSurvivorCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 void AAutoSurvivorCharacter::Move(const FInputActionValue& Value)
 {
+	if (bIsDead) return; // Can't move if dead
+
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
@@ -161,6 +187,8 @@ void AAutoSurvivorCharacter::Move(const FInputActionValue& Value)
 
 void AAutoSurvivorCharacter::Look(const FInputActionValue& Value)
 {
+	if (bIsDead) return;
+
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
@@ -168,4 +196,4 @@ void AAutoSurvivorCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
-}	
+}

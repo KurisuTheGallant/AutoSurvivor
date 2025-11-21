@@ -83,8 +83,7 @@ public:
 
 	AActor* GetNearestEnemy();
 
-	// --- LEVELING SYSTEM (NEW) ---
-
+	// --- LEVELING SYSTEM ---
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Experience")
 	float CurrentExperience = 0.0f;
 
@@ -94,6 +93,22 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Experience")
 	int32 CurrentLevel = 1;
 
-	// Function called by the Gem when picked up
 	void AddExperience(float Amount);
+
+	// --- HEALTH & DEATH SYSTEM (NEW) ---
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	float MaxHealth = 100.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	float CurrentHealth = 100.0f;
+
+	bool bIsDead = false;
+
+	// Function for enemies to call
+	void DamagePlayer(float Amount);
+
+	// Event that we trigger in C++, but define logic for in Blueprint!
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnDeath();
 };

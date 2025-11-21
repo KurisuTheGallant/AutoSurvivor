@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ExperienceGem.h"
+#include "AutoSurvivorCharacter.h" // Needed to access Player Health
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -19,8 +20,6 @@ void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	PlayerTarget = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-
-	// Apply the speed (in case we forgot to call SetStats)
 	GetCharacterMovement()->MaxWalkSpeed = MovementSpeed;
 }
 
@@ -57,16 +56,31 @@ void AEnemyCharacter::DealDamage(float Amount)
 	}
 }
 
-// --- DIFFICULTY LOGIC ---
-
 void AEnemyCharacter::SetStats(float DifficultyMultiplier)
 {
-	// Health scales linearly (Double difficulty = Double Health)
 	Health *= DifficultyMultiplier;
-
-	// Speed scales slowly (so they don't become impossible too fast)
-	// Example: At 2x difficulty, speed increases by 10%
 	MovementSpeed *= (1.0f + (DifficultyMultiplier * 0.1f));
-
 	GetCharacterMovement()->MaxWalkSpeed = MovementSpeed;
+}
+
+// --- DAMAGE PLAYER ON TOUCH ---
+// Unreal automatically calls this when the enemy touches something
+void AEnemyCharacter::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	Super::NotifyActorBeginOverlap(OtherActor);
+
+	// Did we touch the player?
+	if (OtherActor && OtherActor->IsA(AAutoSurvivorCharacter::StaticClass()))
+	{
+		AAutoSurvivorCharacter* Player = Cast<AAutoSurvivorCharacter>(OtherActor);
+		if (Player)
+		{
+			// Deal 10 damage
+			Player->DamagePlayer(10.0f);
+
+			// Optional: Destroy enemy so they don't deal damage 100 times a second
+			// Or implement a "Cooldown" system. For now, suicide-attack is easiest.
+			Destroy();
+		}
+	}
 }

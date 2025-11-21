@@ -24,6 +24,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// --- OVERLAP EVENT (Fix for Error C2509) ---
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	class ACharacter* PlayerTarget;
 
@@ -39,7 +42,6 @@ public:
 
 	void DealDamage(float Amount);
 
-	// --- DIFFICULTY SYSTEM (NEW) ---
-	// Call this right after spawning to buff the enemy
+	// --- DIFFICULTY SYSTEM ---
 	void SetStats(float DifficultyMultiplier);
 };
