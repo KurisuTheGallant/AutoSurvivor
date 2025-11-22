@@ -7,7 +7,7 @@ on:
 env:
   UNREAL_ENGINE_PATH: "D:\\UE_5.7"
   PROJECT_NAME: "AutoSurvivor"
-  # New Variable: Where you want the final game to go
+  # Ensure this path exists on your E: drive
   TARGET_COPY_PATH: "E:\\MyFinishedGames"
 
 jobs:
@@ -22,15 +22,23 @@ jobs:
         run: |
           echo "Building ${{ env.PROJECT_NAME }}..."
           
+      # Step 1: Build the EDITOR (Needed to cook assets)
       - name: Build Editor
         shell: cmd
         run: |
           "%UNREAL_ENGINE_PATH%\\Engine\\Build\\BatchFiles\\Build.bat" ${{ env.PROJECT_NAME }}Editor Win64 Development -Project="%CD%\\${{ env.PROJECT_NAME }}.uproject" -WaitMutex
 
+      # Step 2: Build the GAME (Needed to run the .exe) - THIS WAS MISSING
+      - name: Build Game
+        shell: cmd
+        run: |
+          "%UNREAL_ENGINE_PATH%\\Engine\\Build\\BatchFiles\\Build.bat" ${{ env.PROJECT_NAME }} Win64 Development -Project="%CD%\\${{ env.PROJECT_NAME }}.uproject" -WaitMutex
+
+      # Step 3: Cook and Package
       - name: Cook and Package
         shell: cmd
         run: |
-          "%UNREAL_ENGINE_PATH%\\Engine\\Build\\BatchFiles\\RunUAT.bat" BuildCookRun -project="%CD%\\${{ env.PROJECT_NAME }}.uproject" -noP4 -platform=Win64 -clientconfig=Development -serverconfig=Development -cook -allmaps -stage -archive -archivedirectory="%CD%\\Packaged"
+          "%UNREAL_ENGINE_PATH%\\Engine\\Build\\BatchFiles\\RunUAT.bat" BuildCookRun -project="%CD%\\${{ env.PROJECT_NAME }}.uproject" -noP4 -platform=Win64 -clientconfig=Development -serverconfig=Development -cook -allmaps -build -stage -pak -archive -archivedirectory="%CD%\\Packaged"
 
       - name: Copy to Local Folder
         shell: cmd
@@ -39,7 +47,6 @@ jobs:
           xcopy "%CD%\\Packaged\\Windows" "%TARGET_COPY_PATH%\\LatestBuild" /E /I /Y
           echo "Game copied to %TARGET_COPY_PATH%\\LatestBuild"
 
-      # We still upload to cloud just in case you want a backup
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
