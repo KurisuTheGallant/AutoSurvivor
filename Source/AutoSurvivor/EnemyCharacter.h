@@ -23,8 +23,6 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	// --- OVERLAP EVENT (Fix for Error C2509) ---
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
@@ -44,4 +42,9 @@ public:
 
 	// --- DIFFICULTY SYSTEM ---
 	void SetStats(float DifficultyMultiplier);
+
+	// --- GAME FEEL EVENTS (NEW) ---
+	// Blueprint will implement the visuals (Widget, Particles)
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnDamageReceived(float Amount, FVector HitLocation);
 };

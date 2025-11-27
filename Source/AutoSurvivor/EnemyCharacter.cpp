@@ -4,7 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ExperienceGem.h"
-#include "AutoSurvivorCharacter.h" // Needed to access Player Health
+#include "AutoSurvivorCharacter.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -45,6 +45,10 @@ void AEnemyCharacter::DealDamage(float Amount)
 {
 	Health -= Amount;
 
+	// --- GAME FEEL: TRIGGER VISUALS ---
+	// We pass the location so particles spawn at the right spot
+	OnDamageReceived(Amount, GetActorLocation());
+
 	if (Health <= 0.0f)
 	{
 		if (GemClass)
@@ -63,23 +67,16 @@ void AEnemyCharacter::SetStats(float DifficultyMultiplier)
 	GetCharacterMovement()->MaxWalkSpeed = MovementSpeed;
 }
 
-// --- DAMAGE PLAYER ON TOUCH ---
-// Unreal automatically calls this when the enemy touches something
 void AEnemyCharacter::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	// Did we touch the player?
 	if (OtherActor && OtherActor->IsA(AAutoSurvivorCharacter::StaticClass()))
 	{
 		AAutoSurvivorCharacter* Player = Cast<AAutoSurvivorCharacter>(OtherActor);
 		if (Player)
 		{
-			// Deal 10 damage
 			Player->DamagePlayer(10.0f);
-
-			// Optional: Destroy enemy so they don't deal damage 100 times a second
-			// Or implement a "Cooldown" system. For now, suicide-attack is easiest.
 			Destroy();
 		}
 	}
