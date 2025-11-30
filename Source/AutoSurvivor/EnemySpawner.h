@@ -26,20 +26,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
 	UBoxComponent* SpawnArea;
 
+	// --- CHANGED: NOW A LIST OF ENEMIES ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
-	TSubclassOf<AEnemyCharacter> EnemyClass;
+	TArray<TSubclassOf<AEnemyCharacter>> EnemyTypes;
 
-	// Base spawn rate (starts slow)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
 	float BaseSpawnInterval = 2.0f;
 
-	// Minimum spawn rate (cap it so we don't crash the PC)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
 	float MinSpawnInterval = 0.1f;
 
 	FTimerHandle SpawnTimerHandle;
-
-	// --- DIFFICULTY VARIABLES ---
 
 	float CurrentTime = 0.0f;
 	float CurrentDifficulty = 1.0f;
