@@ -5,73 +5,63 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "InputActionValue.h"
 #include "AutoSurvivorCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
-struct FInputActionValue;
 class ABullet;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+
+// --- NEW: Weapon Enum ---
+// This defines the list of weapons our game knows about.
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	Pistol UMETA(DisplayName = "Pistol"),
+	Shotgun UMETA(DisplayName = "Shotgun"),
+	MachineGun UMETA(DisplayName = "Machine Gun")
+};
 
 UCLASS(config = Game)
 class AAutoSurvivorCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
 
-	/** Follow camera */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
 
-	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 
-	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
 
-	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
 
-	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
 public:
 	AAutoSurvivorCharacter();
 
-
 protected:
-
-	/**Called for movement input*/
 	void Move(const FInputActionValue& Value);
-
-	/**Called for looking input*/
 	void Look(const FInputActionValue& Value);
-
-
-protected:
-	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	// To add mapping context
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 
 public:
-	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	// --- WEAPON SYSTEM ---
 	void FireWeapon();
 	FTimerHandle FireTimerHandle;
 
@@ -79,36 +69,38 @@ public:
 	TSubclassOf<ABullet> BulletClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	float FireRate = 1.0f;
+	float FireRate = 0.5f;
+
+	// --- NEW: Current Weapon Tracking ---
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	EWeaponType CurrentWeapon = EWeaponType::Pistol;
+
+	// Function to change weapon (We will call this from the Level Up Menu later)
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetWeapon(EWeaponType NewWeapon);
+
+	// --- GAME FEEL ---
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayShootEffects();
 
 	AActor* GetNearestEnemy();
 
 	// --- LEVELING SYSTEM ---
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Experience")
 	float CurrentExperience = 0.0f;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Experience")
 	float MaxExperience = 100.0f;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Experience")
 	int32 CurrentLevel = 1;
-
 	void AddExperience(float Amount);
 
-	// --- HEALTH & DEATH SYSTEM (NEW) ---
-
+	// --- HEALTH & DEATH SYSTEM ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float MaxHealth = 100.0f;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 	float CurrentHealth = 100.0f;
-
 	bool bIsDead = false;
-
-	// Function for enemies to call
 	void DamagePlayer(float Amount);
-
-	// Event that we trigger in C++, but define logic for in Blueprint!
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnDeath();
 };
