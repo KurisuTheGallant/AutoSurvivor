@@ -75,9 +75,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	EWeaponType CurrentWeapon = EWeaponType::Pistol;
 
-	// Function to change weapon (We will call this from the Level Up Menu later)
-	UFUNCTION(BlueprintCallable, Category = "Combat")
+	// Helper to switch weapons internally
 	void SetWeapon(EWeaponType NewWeapon);
+
+	// --- UI INTERACTION ---
+
+	// Called by the UI when a player clicks a card
+	UFUNCTION(BlueprintCallable, Category = "Level Up")
+	void ApplyUpgrade(EWeaponType NewWeapon);
+
+	// Event triggered when XP hits max. Implemented in Blueprint to open WBP_LevelUpMenu.
+	UFUNCTION(BlueprintImplementableEvent, Category = "Level Up")
+	void ShowLevelUpMenu();
 
 	// --- GAME FEEL ---
 	UFUNCTION(BlueprintImplementableEvent)

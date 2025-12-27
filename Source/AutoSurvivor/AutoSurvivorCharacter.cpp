@@ -151,6 +151,14 @@ void AAutoSurvivorCharacter::SetWeapon(EWeaponType NewWeapon)
 	GetWorldTimerManager().SetTimer(FireTimerHandle, this, &AAutoSurvivorCharacter::FireWeapon, FireRate, true);
 }
 
+void AAutoSurvivorCharacter::ApplyUpgrade(EWeaponType NewWeapon)
+{
+	SetWeapon(NewWeapon);
+
+	// In the future, we can add logic here for "If Weapon is already owned, upgrade its level instead"
+	// For now, it just swaps the weapon.
+}
+
 void AAutoSurvivorCharacter::AddExperience(float Amount)
 {
 	if (bIsDead) return;
@@ -160,7 +168,9 @@ void AAutoSurvivorCharacter::AddExperience(float Amount)
 		CurrentLevel++;
 		CurrentExperience -= MaxExperience;
 		MaxExperience *= 1.2f;
-		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, FString::Printf(TEXT("LEVEL UP! New Level: %d"), CurrentLevel));
+
+		// Trigger the Blueprint Event
+		ShowLevelUpMenu();
 	}
 }
 
