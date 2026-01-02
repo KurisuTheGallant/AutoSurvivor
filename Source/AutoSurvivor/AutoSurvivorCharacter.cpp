@@ -99,31 +99,53 @@ void AAutoSurvivorCharacter::FireWeapon()
 
 	FVector SpawnLocation = GetActorLocation() + (GetActorForwardVector() * 50.0f);
 
-	// --- WEAPON LOGIC SWITCH ---
+	// --- 1. CALCULATE DAMAGE BASED ON STATS ---
+	// Base Damage (50) * Multiplier (e.g. 1.2 for +20% Might)
+	float FinalDamage = 50.0f * DamageMultiplier;
+
 	switch (CurrentWeapon)
 	{
 	case EWeaponType::Pistol:
-		// Fire 1 shot straight
-		GetWorld()->SpawnActor<ABullet>(BulletClass, SpawnLocation, BaseRotation);
-		break;
+	{
+		ABullet* NewBullet = GetWorld()->SpawnActor<ABullet>(BulletClass, SpawnLocation, BaseRotation);
 
+		// --- 2. INJECT DAMAGE INTO BULLET ---
+		if (NewBullet)
+		{
+			NewBullet->Damage = FinalDamage;
+		}
+		break;
+	}
 	case EWeaponType::Shotgun:
-		// Fire 5 shots in a cone (-30 to +30 degrees)
 		for (int i = -2; i <= 2; i++)
 		{
 			FRotator BulletRot = BaseRotation;
-			BulletRot.Yaw += i * 10.0f; // Spread by 10 degrees each
-			GetWorld()->SpawnActor<ABullet>(BulletClass, SpawnLocation, BulletRot);
+			BulletRot.Yaw += i * 10.0f;
+
+			ABullet* NewBullet = GetWorld()->SpawnActor<ABullet>(BulletClass, SpawnLocation, BulletRot);
+			if (NewBullet)
+			{
+				// Shotgun pellets often do slightly less damage per pellet since there are 5 of them
+				// But for now, let's keep it full damage to feel powerful!
+				NewBullet->Damage = FinalDamage;
+			}
 		}
 		break;
 
 	case EWeaponType::MachineGun:
-		// Fire 1 shot but with tiny random spread for "recoil" feel
+	{
 		float RandomSpread = FMath::RandRange(-5.0f, 5.0f);
 		FRotator BulletRot = BaseRotation;
 		BulletRot.Yaw += RandomSpread;
-		GetWorld()->SpawnActor<ABullet>(BulletClass, SpawnLocation, BulletRot);
+
+		ABullet* NewBullet = GetWorld()->SpawnActor<ABullet>(BulletClass, SpawnLocation, BulletRot);
+		if (NewBullet)
+		{
+			// Machine guns fire fast, so we reduce damage per bullet to balance it
+			NewBullet->Damage = FinalDamage * 0.5f;
+		}
 		break;
+	}
 	}
 
 	PlayShootEffects();
@@ -132,31 +154,103 @@ void AAutoSurvivorCharacter::FireWeapon()
 void AAutoSurvivorCharacter::SetWeapon(EWeaponType NewWeapon)
 {
 	CurrentWeapon = NewWeapon;
-
-	// Update Fire Rate based on weapon type
 	switch (NewWeapon)
 	{
-	case EWeaponType::Pistol:
-		FireRate = 0.5f;
-		break;
-	case EWeaponType::Shotgun:
-		FireRate = 0.8f; // Shotgun is slower
-		break;
-	case EWeaponType::MachineGun:
-		FireRate = 0.1f; // Machine Gun is extremely fast
-		break;
+	case EWeaponType::Pistol: FireRate = 0.5f; break;
+	case EWeaponType::Shotgun: FireRate = 0.8f; break;
+	case EWeaponType::MachineGun: FireRate = 0.1f; break;
 	}
-
-	// Reset the Timer so the new fire rate takes effect immediately
 	GetWorldTimerManager().SetTimer(FireTimerHandle, this, &AAutoSurvivorCharacter::FireWeapon, FireRate, true);
 }
 
-void AAutoSurvivorCharacter::ApplyUpgrade(EWeaponType NewWeapon)
+// --- NEW: Returns a random list of upgrades ---
+TArray<EUpgradeType> AAutoSurvivorCharacter::GetRandomUpgrades(int32 Count)
 {
-	SetWeapon(NewWeapon);
+	TArray<EUpgradeType> AllOptions;
 
-	// In the future, we can add logic here for "If Weapon is already owned, upgrade its level instead"
-	// For now, it just swaps the weapon.
+	// Add every possible upgrade to the pool
+	AllOptions.Add(EUpgradeType::Weapon_Shotgun);
+	AllOptions.Add(EUpgradeType::Weapon_MachineGun);
+	AllOptions.Add(EUpgradeType::Stat_Health);
+	AllOptions.Add(EUpgradeType::Stat_Speed);
+	AllOptions.Add(EUpgradeType::Stat_Damage);
+
+	// Shuffle the array (Fisher-Yates shuffle algorithm)
+	int32 LastIndex = AllOptions.Num() - 1;
+	for (int32 i = 0; i <= LastIndex; ++i)
+	{
+		int32 Index = FMath::RandRange(i, LastIndex);
+		if (i != Index)
+		{
+			AllOptions.Swap(i, Index);
+		}
+	}
+
+	// Return the top 'Count' items
+	TArray<EUpgradeType> Result;
+	for (int32 i = 0; i < Count && i < AllOptions.Num(); i++)
+	{
+		Result.Add(AllOptions[i]);
+	}
+	return Result;
+}
+
+FUpgradeData AAutoSurvivorCharacter::GetUpgradeInfo(EUpgradeType Type)
+{
+	FUpgradeData Info;
+	Info.UpgradeType = Type;
+
+	switch (Type)
+	{
+	case EUpgradeType::Weapon_Shotgun:
+		Info.Title = FText::FromString("Shotgun");
+		Info.Description = FText::FromString("Fires 5 bullets in a spread.");
+		break;
+	case EUpgradeType::Weapon_MachineGun:
+		Info.Title = FText::FromString("Machine Gun");
+		Info.Description = FText::FromString("High fire rate, low accuracy.");
+		break;
+	case EUpgradeType::Stat_Health:
+		Info.Title = FText::FromString("Vitality");
+		Info.Description = FText::FromString("Increase Max Health by +50.");
+		break;
+	case EUpgradeType::Stat_Speed:
+		Info.Title = FText::FromString("Haste");
+		Info.Description = FText::FromString("Move 20% Faster.");
+		break;
+	case EUpgradeType::Stat_Damage:
+		Info.Title = FText::FromString("Might");
+		Info.Description = FText::FromString("Deal 20% more damage.");
+		break;
+	}
+	return Info;
+}
+
+void AAutoSurvivorCharacter::ApplyUpgrade(EUpgradeType UpgradeType)
+{
+	switch (UpgradeType)
+	{
+	case EUpgradeType::Weapon_Shotgun:
+		SetWeapon(EWeaponType::Shotgun);
+		break;
+	case EUpgradeType::Weapon_MachineGun:
+		SetWeapon(EWeaponType::MachineGun);
+		break;
+
+	case EUpgradeType::Stat_Health:
+		MaxHealth += 50.0f;
+		CurrentHealth += 50.0f;
+		break;
+
+	case EUpgradeType::Stat_Speed:
+		MoveSpeedMultiplier += 0.2f;
+		GetCharacterMovement()->MaxWalkSpeed = 600.0f * MoveSpeedMultiplier;
+		break;
+
+	case EUpgradeType::Stat_Damage:
+		DamageMultiplier += 0.2f;
+		break;
+	}
 }
 
 void AAutoSurvivorCharacter::AddExperience(float Amount)
@@ -168,8 +262,6 @@ void AAutoSurvivorCharacter::AddExperience(float Amount)
 		CurrentLevel++;
 		CurrentExperience -= MaxExperience;
 		MaxExperience *= 1.2f;
-
-		// Trigger the Blueprint Event
 		ShowLevelUpMenu();
 	}
 }
@@ -207,6 +299,7 @@ void AAutoSurvivorCharacter::Move(const FInputActionValue& Value)
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
 		this->AddMovementInput(ForwardDirection, MovementVector.Y);
 		this->AddMovementInput(RightDirection, MovementVector.X);
 	}

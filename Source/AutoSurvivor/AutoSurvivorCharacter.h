@@ -16,14 +16,42 @@ class ABullet;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-// --- NEW: Weapon Enum ---
-// This defines the list of weapons our game knows about.
+// --- 1. EXISTING WEAPON ENUM (Kept for internal logic) ---
 UENUM(BlueprintType)
 enum class EWeaponType : uint8
 {
 	Pistol UMETA(DisplayName = "Pistol"),
 	Shotgun UMETA(DisplayName = "Shotgun"),
 	MachineGun UMETA(DisplayName = "Machine Gun")
+};
+
+// --- 2. NEW: UPGRADE TYPE (The Master List) ---
+UENUM(BlueprintType)
+enum class EUpgradeType : uint8
+{
+	Weapon_Shotgun UMETA(DisplayName = "Weapon: Shotgun"),
+	Weapon_MachineGun UMETA(DisplayName = "Weapon: Machine Gun"),
+	Stat_Health UMETA(DisplayName = "Stat: Max Health"),
+	Stat_Speed UMETA(DisplayName = "Stat: Move Speed"),
+	Stat_Damage UMETA(DisplayName = "Stat: Damage Boost")
+};
+
+// --- 3. NEW: UPGRADE DATA STRUCT (The Info Card) ---
+USTRUCT(BlueprintType)
+struct FUpgradeData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText Title;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText Description;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EUpgradeType UpgradeType;
+
+	// Optional: You can add "UTexture2D* Icon" here later!
 };
 
 UCLASS(config = Game)
@@ -71,20 +99,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float FireRate = 0.5f;
 
-	// --- NEW: Current Weapon Tracking ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	EWeaponType CurrentWeapon = EWeaponType::Pistol;
 
-	// Helper to switch weapons internally
 	void SetWeapon(EWeaponType NewWeapon);
 
 	// --- UI INTERACTION ---
 
-	// Called by the UI when a player clicks a card
+	// NEW: Helper function to get the Text for an upgrade
 	UFUNCTION(BlueprintCallable, Category = "Level Up")
-	void ApplyUpgrade(EWeaponType NewWeapon);
+	FUpgradeData GetUpgradeInfo(EUpgradeType Type);
 
-	// Event triggered when XP hits max. Implemented in Blueprint to open WBP_LevelUpMenu.
+	// NEW: Returns a list of random upgrades for the menu to display
+	UFUNCTION(BlueprintCallable, Category = "Level Up")
+	TArray<EUpgradeType> GetRandomUpgrades(int32 Count);
+
+	// UPDATED: Now takes the master Enum
+	UFUNCTION(BlueprintCallable, Category = "Level Up")
+	void ApplyUpgrade(EUpgradeType UpgradeType);
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Level Up")
 	void ShowLevelUpMenu();
 
@@ -112,4 +145,10 @@ public:
 	void DamagePlayer(float Amount);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnDeath();
+
+	// --- NEW: PASSIVE STATS ---
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float DamageMultiplier = 1.0f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float MoveSpeedMultiplier = 1.0f;
 };
